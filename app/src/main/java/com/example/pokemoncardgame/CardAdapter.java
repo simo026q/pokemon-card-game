@@ -18,7 +18,7 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.CardViewHolder
 
     private final List<PokemonCard> cardList;
 
-    private boolean playerhand = true;
+    private boolean playerhand;
 
     public CardAdapter(List<PokemonCard> cardList, boolean... isPlayersHand) {
         this.cardList = cardList;
