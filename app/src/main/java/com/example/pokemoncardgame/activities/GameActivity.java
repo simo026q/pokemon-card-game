@@ -10,11 +10,12 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.pokemoncardgame.CardAdapter;
 import com.example.pokemoncardgame.OnCardClickListener;
 import com.example.pokemoncardgame.R;
+import com.example.pokemoncardgame.data.Game;
 import com.example.pokemoncardgame.data.Player;
 import com.example.pokemoncardgame.data.PokemonCardDetails;
+import com.example.pokemoncardgame.data.network.PokemonCardService;
 
 import java.util.ArrayList;
-import java.util.List;
 
 public class GameActivity extends AppCompatActivity implements OnCardClickListener {
 
@@ -22,7 +23,6 @@ public class GameActivity extends AppCompatActivity implements OnCardClickListen
 
     CardAdapter opponentsHandAdapter;
 
-    private List<Player> players;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -30,16 +30,17 @@ public class GameActivity extends AppCompatActivity implements OnCardClickListen
         setContentView(R.layout.activity_game);
 
         // Get the players from the intent
-        players = (List<Player>) getIntent().getSerializableExtra("players");
+        int numberOfCards = getIntent().getIntExtra("numberOfCards", 0);
+
+        Game game = new Game(numberOfCards, new PokemonCardService(this));
 
         // Initialize the card lists
-        assert players != null;
-        for (Player player : players) {
+        for (Player player : game.getPlayers()) {
             player.hand = new ArrayList<PokemonCardDetails>();
         }
 
         // Set up the adapters and recycler views
-        for (Player player : players) {
+        for (Player player : game.getPlayers()) {
             if (!player.isAi) {
                 RecyclerView playersHandRecyclerView = findViewById(R.id.players_hand);
                 playersHandAdapter = new CardAdapter(player.hand, this);
