@@ -38,7 +38,7 @@ public class GameActivity extends AppCompatActivity {
 
         // Set up the adapters and recycler views
         for (Player player : players) {
-            if (!player.AI) {
+            if (!player.isAi) {
                 RecyclerView playersHandRecyclerView = findViewById(R.id.players_hand);
                 playersHandAdapter = new CardAdapter(player.hand);
                 playersHandRecyclerView.setAdapter(playersHandAdapter);
