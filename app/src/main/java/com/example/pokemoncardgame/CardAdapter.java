@@ -10,17 +10,18 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.pokemoncardgame.data.PokemonCard;
+import com.example.pokemoncardgame.data.PokemonCardDetails;
 import com.squareup.picasso.Picasso;
 
 import java.util.List;
 
 public class CardAdapter extends RecyclerView.Adapter<CardAdapter.CardViewHolder> {
 
-    private final List<PokemonCard> cardList;
+    private final List<PokemonCardDetails> cardList;
 
     private boolean playerhand;
 
-    public CardAdapter(List<PokemonCard> cardList, boolean... isPlayersHand) {
+    public CardAdapter(List<PokemonCardDetails> cardList, boolean... isPlayersHand) {
         this.cardList = cardList;
         playerhand = isPlayersHand != null && isPlayersHand.length > 0 && isPlayersHand[0];
     }
