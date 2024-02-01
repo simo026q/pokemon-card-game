@@ -54,7 +54,7 @@ public class Player {
 
     public void playAICard(Player opponent) {
         Random rand = new Random();
-        if (activeDead()) {
+        /*if (activeDead()) {
             if (AIProfile.RANDOM.equals(aiProfile)) {
                  playCard(hand.get(rand.nextInt(hand.size() - 1)));
             }
@@ -65,10 +65,18 @@ public class Player {
                             playCard(card);
                             break;
                         }
+                        else {
+                            playCard(card);
+                            break;
+                        }
                     } else if (AIProfile.AGGRESSIVE.equals(aiProfile)) {
                         if (card.hp > 0) {
                             for (Attack attack : card.attacks) {
                                 if (attack.damage > 0 && attack.damage >= opponent.activePokemon.hp) {
+                                    playCard(card);
+                                    break;
+                                }
+                                else {
                                     playCard(card);
                                     break;
                                 }
@@ -80,6 +88,6 @@ public class Player {
                     }
                 }
             }
-        }
+        }*/
     }
 }
