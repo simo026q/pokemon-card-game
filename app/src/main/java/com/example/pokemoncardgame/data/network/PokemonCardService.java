@@ -2,15 +2,8 @@ package com.example.pokemoncardgame.data.network;
 
 import android.content.Context;
 
-import com.android.volley.AsyncNetwork;
-import com.android.volley.AsyncRequestQueue;
-import com.android.volley.Cache;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
-import com.android.volley.toolbox.AsyncHttpStack;
-import com.android.volley.toolbox.BasicAsyncNetwork;
-import com.android.volley.toolbox.DiskBasedCache;
-import com.android.volley.toolbox.JsonRequest;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 import com.example.pokemoncardgame.data.PokemonCard;
@@ -20,13 +13,14 @@ import com.google.gson.reflect.TypeToken;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
 public class PokemonCardService {
     private static final String BASE_URI = "https://api.tcgdex.net/v2/en";
     private static List<PokemonCard> pokemonCards = new ArrayList<PokemonCard>(0);
 
-    private RequestQueue requestQueue;
+    private final RequestQueue requestQueue;
 
     public PokemonCardService(Context context) {
         requestQueue = Volley.newRequestQueue(context);
@@ -58,14 +52,21 @@ public class PokemonCardService {
     private void getCardDetails(String id, Consumer<PokemonCardDetails> callback) {
         String uri = BASE_URI + "/cards/" + id;
 
-        StringRequest request = new StringRequest(
-                uri,
+        StringRequest request = new StringRequest(uri,
             response -> {
-                PokemonCardDetails card = new Gson().fromJson(response, PokemonCardDetails.class);
-                callback.accept(card);
+                PokemonCardDetails card = null;
+                try {
+                    card = new Gson().fromJson(response, PokemonCardDetails.class);
+                }
+                catch (Exception err) {
+                    System.out.println("Error: " + err);
+                }
+                finally {
+                    callback.accept(card);
+                }
             },
-            error -> {
-                System.out.println("Error: " + error.toString());
+            err -> {
+                System.out.println("Error: " + err.toString());
                 callback.accept(null);
             }
         );
@@ -73,61 +74,42 @@ public class PokemonCardService {
         requestQueue.add(request);
     }
 
-    public synchronized void getRandomCards(int count, Consumer<List<PokemonCardDetails>> callback) {
-        getCards(cards -> {
-            int safeCount = Math.min(Math.max(0, count), pokemonCards.size());
+    public void getRandomCards(int count, Consumer<List<PokemonCardDetails>> callback) {
+        getCards(pokemonCards -> {
+            Thread thread = new Thread(() -> {
+                int safeCount = Math.min(Math.max(0, count), pokemonCards.size());
 
-            List<PokemonCardDetails> randomCards = new ArrayList<PokemonCardDetails>(safeCount);
+                List<PokemonCardDetails> randomCards = new ArrayList<PokemonCardDetails>(safeCount);
 
-            Wrapper<Boolean> ready = new Wrapper<Boolean>(true);
-            while (randomCards.size() < safeCount) {
-                if (!ready.value) {
-                    continue;
+                AtomicBoolean isReady = new AtomicBoolean(true);
+                while (randomCards.size() < safeCount) {
+                    if (!isReady.get()) {
+                        try {
+                            Thread.sleep(100);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                        continue;
+                    }
+
+                    isReady.set(false);
+
+                    int randomIndex = (int)(Math.random() * pokemonCards.size());
+                    PokemonCard card = pokemonCards.get(randomIndex);
+
+                    getCardDetails(card.id, randomCard -> {
+                        if (randomCard != null && !randomCards.contains(randomCard)) {
+                            randomCards.add(randomCard);
+                        }
+
+                        isReady.set(true);
+                    });
                 }
 
-                System.out.println("getRandomCards :: Ready - " + randomCards.size() + " / " + safeCount);
+                callback.accept(randomCards);
+            });
 
-                int randomIndex = (int)(Math.random() * pokemonCards.size());
-                PokemonCard card = pokemonCards.get(randomIndex);
-
-                ready.value = false;
-                getCardDetails(card.id, randomCard -> {
-                    if (randomCard == null || randomCards.contains(randomCard) || randomCard.category != "Pokemon") {
-                        ready.value = true;
-                        return;
-                    }
-
-                    randomCards.add(randomCard);
-                    ready.value = true;
-
-                    if (randomCards.size() == safeCount) {
-                        callback.accept(randomCards);
-                    }
-                });
-            }
-
-            /*for (int i = 0; i < safeCount; i++) {
-                int randomIndex = (int)(Math.random() * pokemonCards.size());
-                PokemonCard card = pokemonCards.get(randomIndex);
-
-                int finalI = i;
-
-                getCardDetails(card.id, randomCard -> {
-                    randomCards.add(randomCard);
-
-                    if (finalI + 1 == safeCount) {
-                        callback.accept(randomCards);
-                    }
-                });
-            }*/
+            thread.start();
         });
-    }
-}
-
-class Wrapper<T> {
-    public T value;
-
-    public Wrapper(T value) {
-        this.value = value;
     }
 }

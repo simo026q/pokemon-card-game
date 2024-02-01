@@ -30,7 +30,11 @@ public class MainActivity extends AppCompatActivity {
                 sb.append("\n");
             }
 
-            debugTextView.setText(sb.toString());
+            String debugText = sb.toString();
+
+            this.runOnUiThread(() -> {
+                debugTextView.setText(debugText);
+            });
         });
     }
 }
