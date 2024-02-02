@@ -7,27 +7,27 @@ import java.util.Collections;
 import java.util.List;
 
 public class Game {
-    private final List<Player> players;
+    private final List<Player> players = Collections.synchronizedList(new ArrayList<Player>(2));
     private int turnIdx = 0;
 
     public Game(int numberOfCards, PokemonCardService pokemonCardService) {
-        this.players = new ArrayList<Player>(2);
-
         pokemonCardService.getRandomCards(numberOfCards * 2, cards -> {
-            players.add(new Player("Player", cards.subList(0, numberOfCards)));
-            players.add(new AiPlayer("Bot", cards.subList(numberOfCards, numberOfCards * 2)));
+            synchronized (players) {
+                players.add(new Player("Player", new ArrayList<>(cards.subList(0, numberOfCards)))); // Use new ArrayList for thread safety
+                players.add(new AiPlayer("Bot", new ArrayList<>(cards.subList(numberOfCards, numberOfCards * 2)))); // Ditto
+            }
         });
     }
 
-    public List<Player> getPlayers() {
-        return Collections.unmodifiableList(players);
+    public synchronized List<Player> getPlayers() {
+        return new ArrayList<>(players); // Return a copy to avoid ConcurrentModificationException
     }
 
-    public Player getCurrentPlayer() {
+    public synchronized Player getCurrentPlayer() {
         return players.get(turnIdx);
     }
 
-    public Player nextTurn() {
+    public synchronized Player nextTurn() {
         turnIdx = (turnIdx + 1) % players.size();
         return getCurrentPlayer();
     }
