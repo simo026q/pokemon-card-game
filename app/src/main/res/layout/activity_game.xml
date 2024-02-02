@@ -28,7 +28,21 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
-        <!-- Additional elements for the play area can be added here -->
+        <!-- Opponent's Active Card Area -->
+        <ImageView
+            android:id="@+id/opponent_active_card"
+            android:layout_width="120dp"
+            android:layout_height="160dp"
+            android:layout_gravity="top|center_horizontal"
+            android:layout_marginTop="8dp" />
+
+        <!-- Player's Active Card Area -->
+        <ImageView
+            android:id="@+id/player_active_card"
+            android:layout_width="120dp"
+            android:layout_height="160dp"
+            android:layout_gravity="bottom|center_horizontal"
+            android:layout_marginBottom="8dp" />
 
     </FrameLayout>
 

@@ -27,19 +27,18 @@ public class Player {
         this.isAi = isAi;
     }
 
-    public boolean setActiveCard(PokemonCardDetails card) {
+    public synchronized boolean setActiveCard(PokemonCardDetails card) {
         if (hand.contains(card)) {
             hand.remove(card);
             activeCard = card;
             return true;
         }
-
         return false;
     }
 
-    public void attackWithCard(PokemonCardDetails attackerCard) {
+    public synchronized void attackWithCard(PokemonCardDetails defenderCard) {
         if (activeCard != null) {
-            activeCard.hp -= attackerCard.getAttackDamage();
+            defenderCard.dealDamage(activeCard.getAttackDamage());
 
             if (!activeCard.isAlive()) {
                 activeCard = null;
@@ -47,9 +46,10 @@ public class Player {
         }
     }
 
-    public boolean hasLost() {
-        return hand.size() == 0 && activeCard != null && !activeCard.isAlive();
+    public synchronized boolean hasLost() {
+        return hand.isEmpty() && (activeCard == null || !activeCard.isAlive());
     }
+
 
     /*private String attack(PokemonCardDetails attacker, PokemonCardDetails defender, Attack attack) {
         if (attacker.hp <= 0) {
