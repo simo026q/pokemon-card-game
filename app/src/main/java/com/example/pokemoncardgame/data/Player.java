@@ -47,7 +47,7 @@ public class Player {
     }
 
     public synchronized boolean hasLost() {
-        return activeCard == null && hand.isEmpty();
+        return hand.isEmpty() && (activeCard == null || !activeCard.isAlive());
     }
 
 
