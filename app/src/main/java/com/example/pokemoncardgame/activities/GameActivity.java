@@ -2,7 +2,6 @@ package com.example.pokemoncardgame.activities;
 
 import android.os.Bundle;
 import android.os.Handler;
-import android.view.View;
 import android.widget.ImageView;
 import android.widget.Toast;
 
@@ -20,7 +19,6 @@ import com.example.pokemoncardgame.data.PokemonCardDetails;
 import com.example.pokemoncardgame.data.network.PokemonCardService;
 import com.squareup.picasso.Picasso;
 
-import java.util.Random;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class GameActivity extends AppCompatActivity implements OnCardClickListener {
@@ -147,7 +145,7 @@ public class GameActivity extends AppCompatActivity implements OnCardClickListen
 
     @Override
     public void onCardClick(PokemonCardDetails card) {
-        if (!game.getCurrentPlayer().isAi) {
+        if (!game.getCurrentPlayer().isAi && game.getCurrentPlayer().hand.contains(card) && game.getCurrentPlayer().activeCard == null) {
             int cardPosition = game.getCurrentPlayer().hand.indexOf(card);
             if (cardPosition != -1) {
                 playersHandAdapter.notifyItemRemoved(cardPosition);
