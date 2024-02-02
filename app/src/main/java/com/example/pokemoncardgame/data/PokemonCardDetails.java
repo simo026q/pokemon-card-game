@@ -20,8 +20,10 @@ public class PokemonCardDetails extends PokemonCard {
 
     public int getAttackDamage() {
         int damage = 0;
-        for (Attack attack : attacks) {
-            damage = Math.max(damage, attack.damage);
+        if (attacks != null) {
+            for (Attack attack : attacks) {
+                damage = Math.max(damage, attack.damage);
+            }
         }
         return damage;
     }
