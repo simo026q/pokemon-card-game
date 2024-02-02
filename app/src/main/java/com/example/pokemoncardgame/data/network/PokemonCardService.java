@@ -57,6 +57,10 @@ public class PokemonCardService {
                 PokemonCardDetails card = null;
                 try {
                     card = new Gson().fromJson(response, PokemonCardDetails.class);
+
+                    if (card.category != "Pokemon" || card.getAttackDamage() <= 0) {
+                        card = null;
+                    }
                 }
                 catch (Exception err) {
                     System.out.println("Error: " + err);
