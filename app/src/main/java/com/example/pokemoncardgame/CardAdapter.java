@@ -48,12 +48,7 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.CardViewHolder
             holder.cardImage.setImageResource(R.drawable.card_back);
         }
 
-        holder.itemView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                listener.onCardClick(card);
-            }
-        });
+        holder.itemView.setOnClickListener(v -> listener.onCardClick(card));
     }
 
     @Override
