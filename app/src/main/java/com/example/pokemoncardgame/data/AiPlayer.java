@@ -8,11 +8,7 @@ public class AiPlayer extends Player {
         super(name, playerHand, true);
     }
 
-    public boolean setActiveCard() {
-        return setActiveCard(getRandomCardFromHand());
-    }
-
-    private PokemonCardDetails getRandomCardFromHand() {
+    public PokemonCardDetails getRandomCardFromHand() {
         Random random = new Random();
         int randomIndex = random.nextInt(hand.size());
         return hand.get(randomIndex);
