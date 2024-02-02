@@ -13,6 +13,7 @@ import com.google.gson.reflect.TypeToken;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
@@ -58,7 +59,7 @@ public class PokemonCardService {
                 try {
                     card = new Gson().fromJson(response, PokemonCardDetails.class);
 
-                    if (card.category != "Pokemon" || card.getAttackDamage() <= 0) {
+                    if (!Objects.equals(card.category, "Pokemon") || card.getAttackDamage() <= 0) {
                         card = null;
                     }
                 }
