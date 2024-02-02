@@ -17,6 +17,24 @@ public class PokemonCardDetails extends PokemonCard {
     public ArrayList<Attack> attacks;
     public ArrayList<Weakness> weaknesses;
     public Legal legal;
+
+    public int getAttackDamage() {
+        int damage = 0;
+        if (attacks != null) {
+            for (Attack attack : attacks) {
+                damage = Math.max(damage, attack.damage);
+            }
+        }
+        return damage;
+    }
+
+    public void dealDamage(int damage) {
+        hp -= damage;
+    }
+
+    public boolean isAlive() {
+        return hp > 0;
+    }
 }
 
 class Ability{
