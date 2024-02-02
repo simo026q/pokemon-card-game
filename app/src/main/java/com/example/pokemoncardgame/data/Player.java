@@ -3,7 +3,6 @@ package com.example.pokemoncardgame.data;
 import androidx.annotation.Nullable;
 
 import java.util.List;
-import java.util.Random;
 import java.util.UUID;
 
 public class Player {
@@ -27,23 +26,25 @@ public class Player {
         this.isAi = isAi;
     }
 
-    public synchronized boolean setActiveCard(PokemonCardDetails card) {
+    public synchronized String setActiveCard(PokemonCardDetails card) {
         if (hand.contains(card)) {
             hand.remove(card);
             activeCard = card;
-            return true;
+            return name + " played " + card.name + "!"; // Return a message to display to the user
         }
-        return false;
+        return name + " does not have that card!";
     }
 
-    public synchronized void attackWithCard(PokemonCardDetails defenderCard) {
+    public synchronized String attackWithCard(PokemonCardDetails defenderCard) {
         if (activeCard != null) {
             defenderCard.dealDamage(activeCard.getAttackDamage());
-
-            if (!activeCard.isAlive()) {
-                activeCard = null;
+            if (!defenderCard.isAlive()) {
+                return activeCard.name + " attacked " + defenderCard.name + " for " + activeCard.getAttackDamage() + " damage and knocked it out!";
             }
+            return activeCard.name + " attacked " + defenderCard.name + " for " + activeCard.getAttackDamage() + " damage!";
+
         }
+        return name + " has no active card to attack with!";
     }
 
     public synchronized boolean hasLost() {

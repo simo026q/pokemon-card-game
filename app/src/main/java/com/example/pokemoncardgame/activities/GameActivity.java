@@ -2,7 +2,9 @@ package com.example.pokemoncardgame.activities;
 
 import android.os.Bundle;
 import android.os.Handler;
+import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -31,6 +33,7 @@ public class GameActivity extends AppCompatActivity implements OnCardClickListen
 
     private Handler handler = new Handler();
     private Runnable setupRunnable;
+    Button attackButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,6 +42,12 @@ public class GameActivity extends AppCompatActivity implements OnCardClickListen
 
         int numberOfCards = getIntent().getIntExtra("numberOfCards", 0);
         game = new Game(numberOfCards, new PokemonCardService(this));
+
+        attackButton = findViewById(R.id.player_attack_button);
+        attackButton.setEnabled(false);
+        attackButton.setOnClickListener(v -> {
+            performAttack();
+        });
 
         setupRunnable = new Runnable() {
             @Override
@@ -71,6 +80,21 @@ public class GameActivity extends AppCompatActivity implements OnCardClickListen
         }
     }
 
+
+    private void performAttack() {
+        if (!game.getCurrentPlayer().isAi) {
+            // Implement the logic to perform an attack with the player's active card
+            // This might involve modifying the game state, updating the UI, etc.
+            AiPlayer opponent = (AiPlayer) game.getPlayers().get(game.getCurrentPlayer() == game.getPlayers().get(1) ? 0 : 1);
+            attackButton.setEnabled(false);
+            Toast.makeText(this, game.getCurrentPlayer().attackWithCard(opponent.activeCard), Toast.LENGTH_LONG).show();
+
+            // Update UI or game state as needed after the attack
+            updateActiveCardViews();
+            game.nextTurn();
+        }
+    }
+
     private boolean playAiTurn() {
         if (game.getPlayers().size() < 2) return true; // Safety check
 
@@ -82,7 +106,13 @@ public class GameActivity extends AppCompatActivity implements OnCardClickListen
                 return true;
             }
             if (aiPlayer.activeCard != null && opponent.activeCard != null) {
-                aiPlayer.attackWithCard(opponent.activeCard);
+                Toast.makeText(this, aiPlayer.attackWithCard(opponent.activeCard), Toast.LENGTH_LONG).show();
+                updateActiveCardViews();
+                try {
+                    Thread.sleep(5000); // Pause to simulate turn duration
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt(); // Restore interruption status
+                }
                 game.nextTurn();
             }
             if (aiPlayer.activeCard == null && !aiPlayer.hand.isEmpty()) {
@@ -91,8 +121,13 @@ public class GameActivity extends AppCompatActivity implements OnCardClickListen
                 if (cardPosition != -1) {
                     opponentsHandAdapter.notifyItemRemoved(cardPosition);
                 }
-                aiPlayer.setActiveCard(card);
+                Toast.makeText(this, aiPlayer.setActiveCard(card), Toast.LENGTH_LONG).show();
                 updateActiveCardViews();
+                try {
+                    Thread.sleep(200); // Pause to simulate turn duration
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt(); // Restore interruption status
+                }
                 game.nextTurn();
             }
         }
@@ -105,6 +140,7 @@ public class GameActivity extends AppCompatActivity implements OnCardClickListen
             // Ensure game loop runs on the main thread when updating UI components
             runOnUiThread(() -> {
                 if (!game.getPlayers().isEmpty() && game.getCurrentPlayer() != null) {
+                    cardDeathHandler();
                     if (game.getCurrentPlayer().isAi) {
                         isGameOver.set(playAiTurn());
                     } else {
@@ -114,48 +150,83 @@ public class GameActivity extends AppCompatActivity implements OnCardClickListen
                 }
             });
             try {
-                Thread.sleep(5000); // Pause to simulate turn duration
+                Thread.sleep(1000); // Pause to simulate turn duration
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt(); // Restore interruption status
             }
         }
+        finish();
     }
 
 
     public void updateActiveCardViews() {
         ImageView playerActiveCardView = findViewById(R.id.player_active_card);
         ImageView opponentActiveCardView = findViewById(R.id.opponent_active_card);
+        TextView playerCardInfoView = findViewById(R.id.player_card_info);
+        TextView opponentCardInfoView = findViewById(R.id.opponent_card_info);
 
         for (Player player : game.getPlayers()) {
             if (player.activeCard != null) { // Check if the player has an active card
+                // Construct the card information string
+                PokemonCardDetails activeCard = player.activeCard;
+                //set the name, the attack with most damage and health values
+                String cardInfo = activeCard.name + "\n" + "Attack: " + activeCard.getAttackDamage() + " damage" + "\n" + "Health: " + activeCard.hp + " HP";
+                // Update the TextView with the card information
                 if (!player.isAi) {
+                    playerCardInfoView.setText(cardInfo);
+                    Button attackButton = findViewById(R.id.player_attack_button);
                     // It's a human player
                     Picasso.get()
                             .load(player.activeCard.image + "/high.jpg")
                             .into(playerActiveCardView);
+                    playerActiveCardView.setVisibility(ImageView.VISIBLE);
                 } else {
+                    opponentCardInfoView.setText(cardInfo);
                     // It's an AI player
                     Picasso.get()
                             .load(player.activeCard.image + "/high.jpg")
                             .into(opponentActiveCardView);
+                    opponentActiveCardView.setVisibility(ImageView.VISIBLE);
+                }
+            }
+            else {
+                if (!player.isAi) {
+                    playerCardInfoView.setText("No active card");
+                    playerActiveCardView.setVisibility(ImageView.INVISIBLE);
+                } else {
+                    opponentCardInfoView.setText("No active card");
+                    opponentActiveCardView.setVisibility(ImageView.INVISIBLE);
                 }
             }
         }
     }
 
+    private void cardDeathHandler() {
+        if (game.getCurrentPlayer().activeCard != null && game.getCurrentPlayer().activeCard.hp <= 0) {
+            game.getCurrentPlayer().activeCard = null;
+            attackButton.setEnabled(false);
+            updateActiveCardViews();
+        }
+        else if (game.getCurrentPlayer().activeCard != null) {
+            attackButton.setEnabled(true);
+        }
+    }
+
+
     @Override
     public void onCardClick(PokemonCardDetails card) {
         if (!game.getCurrentPlayer().isAi && game.getCurrentPlayer().hand.contains(card) && game.getCurrentPlayer().activeCard == null) {
             int cardPosition = game.getCurrentPlayer().hand.indexOf(card);
-            if (cardPosition != -1) {
-                playersHandAdapter.notifyItemRemoved(cardPosition);
-            }
-            game.getCurrentPlayer().setActiveCard(card);
+            playersHandAdapter.notifyItemRemoved(cardPosition);
+            playersHandAdapter.notifyItemRangeChanged(cardPosition, game.getCurrentPlayer().hand.size());
+            Toast.makeText(this, game.getCurrentPlayer().setActiveCard(card), Toast.LENGTH_SHORT).show();
+            attackButton.setEnabled(true);
             updateActiveCardViews();
-            Toast.makeText(this, "Card clicked: " + card.name, Toast.LENGTH_SHORT).show();
-            game.nextTurn();
+
+            game.nextTurn(); // Move to the next turn
         }
     }
+
 
     @Override
     public void onPointerCaptureChanged(boolean hasCapture) {
